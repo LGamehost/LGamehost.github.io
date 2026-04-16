@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Snake</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial;
+    color: white;
+}
+
+h2 {
+    margin: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #007bff;
+    color: white;
+    font-size: 16px;
+    display: none;
+}
+
+canvas {
+    background: black;
+    border: 2px solid white;
+}
+</style>
+</head>
+
+<body>
+
+<h2>🐍 Snake</h2>
+<button id="restartBtn" onclick="restartGame()">🔁 Restart</button>
+
+<canvas id="game" width="600" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const WIDTH = 600;
+const HEIGHT = 400;
+const BLOCK = 20;
+
+let snake, direction, food, score, highscore, gameOver;
+
+highscore = localStorage.getItem("snake_highscore");
+highscore = highscore ? parseInt(highscore) : 0;
+
+// ---------------- START ----------------
+function startGame() {
+    snake = [{x: 200, y: 200}];
+    direction = "RIGHT";
+    score = 0;
+    gameOver = false;
+
+    document.getElementById("restartBtn").style.display = "none";
+
+    food = spawnFood();
+}
+
+// ---------------- FOOD (SAFE + VISIBEL) ----------------
+function spawnFood() {
+    let newFood;
+
+    while (true) {
+        newFood = {
+            x: Math.floor(Math.random() * (WIDTH / BLOCK)) * BLOCK,
+            y: Math.floor(Math.random() * (HEIGHT / BLOCK)) * BLOCK
+        };
+
+        let onSnake = false;
+
+        for (let part of snake) {
+            if (part.x === newFood.x && part.y === newFood.y) {
+                onSnake = true;
+                break;
+            }
+        }
+
+        if (!onSnake) break;
+    }
+
+    return newFood;
+}
+
+// ---------------- CONTROLS ----------------
+document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+    if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+    if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+    if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+});
+
+// ---------------- RESTART ----------------
+function restartGame() {
+    startGame();
+}
+
+// ---------------- UPDATE ----------------
+function update() {
+    if (gameOver) return;
+
+    let head = {x: snake[0].x, y: snake[0].y};
+
+    if (direction === "LEFT") head.x -= BLOCK;
+    if (direction === "RIGHT") head.x += BLOCK;
+    if (direction === "UP") head.y -= BLOCK;
+    if (direction === "DOWN") head.y += BLOCK;
+
+    // 🌍 WRAP AROUND
+    if (head.x < 0) head.x = WIDTH - BLOCK;
+    else if (head.x >= WIDTH) head.x = 0;
+
+    if (head.y < 0) head.y = HEIGHT - BLOCK;
+    else if (head.y >= HEIGHT) head.y = 0;
+
+    // 💀 SELF COLLISION
+    for (let part of snake) {
+        if (part.x === head.x && part.y === head.y) {
+            gameOver = true;
+            saveHighscore();
+            document.getElementById("restartBtn").style.display = "block";
+            return;
+        }
+    }
+
+    snake.unshift(head);
+
+    // 🍎 FOOD
+    if (head.x === food.x && head.y === food.y) {
+        score++;
+        if (score > highscore) highscore = score;
+        food = spawnFood();
+    } else {
+        snake.pop();
+    }
+}
+
+// ---------------- HIGH SCORE ----------------
+function saveHighscore() {
+    if (score > highscore) {
+        highscore = score;
+        localStorage.setItem("snake_highscore", highscore);
+    }
+}
+
+// ---------------- DRAW SNAKE ----------------
+function drawSnake() {
+    snake.forEach((s, i) => {
+        ctx.fillStyle = i === 0 ? "#0b6b2a" : "#2ecc71";
+        ctx.fillRect(s.x, s.y, BLOCK, BLOCK);
+
+        if (i === 0) {
+            ctx.fillStyle = "white";
+            ctx.fillRect(s.x + 5, s.y + 5, 4, 4);
+            ctx.fillRect(s.x + 12, s.y + 5, 4, 4);
+        }
+    });
+}
+
+// ---------------- DRAW APPLE (REALISTIC) ----------------
+function drawApple() {
+    const x = food.x + BLOCK / 2;
+    const y = food.y + BLOCK / 2;
+
+    // Body
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(x, y, BLOCK / 2 - 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Highlight
+    ctx.fillStyle = "rgba(255,255,255,0.4)";
+    ctx.beginPath();
+    ctx.arc(x - 4, y - 4, 4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Leaf
+    ctx.fillStyle = "green";
+    ctx.beginPath();
+    ctx.ellipse(x + 5, y - 10, 6, 3, Math.PI / 4, 0, Math.PI * 2);
+    ctx.fill();
+}
+
+// ---------------- DRAW ----------------
+function draw() {
+    ctx.fillStyle = "black";
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    drawApple();
+    drawSnake();
+
+    // UI oben links
+    ctx.fillStyle = "white";
+    ctx.font = "18px Arial";
+    ctx.fillText("Score: " + score, 10, 20);
+    ctx.fillText("Highscore: " + highscore, 10, 45);
+
+    if (gameOver) {
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+        ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+        ctx.fillStyle = "white";
+        ctx.font = "30px Arial";
+        ctx.fillText("GAME OVER", 200, 180);
+    }
+}
+
+// ---------------- LOOP ----------------
+function loop() {
+    update();
+    draw();
+    setTimeout(loop, 100);
+}
+
+// START
+startGame();
+loop();
+</script>
+
+</body>
+</html>
