@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>LGame</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f0f0f0;
+    margin: 0;
+}
+
+header {
+    background: #222;
+    color: white;
+    padding: 20px;
+}
+
+button {
+    padding: 10px 15px;
+    margin: 10px;
+    cursor: pointer;
+    border: none;
+    background: #007bff;
+    color: white;
+    border-radius: 8px;
+}
+
+.game {
+    display: none;
+    margin-top: 30px;
+}
+
+.active {
+    display: block;
+}
+
+canvas {
+    background: black;
+    display: block;
+    margin: 20px auto;
+}
+html, body {
+    overflow: hidden;
+    height: 100%;
+}
+    
+</style>
+
+</head>
+<body>
+
+<header>
+<h1>🎮 LGame 🎮</h1>
+
+<button onclick="showGame('menu')">Start</button>
+<button onclick="showGame('snake')">Snake 🐍</button>
+<button onclick="showGame('flappy')">Flappybird 🐦</button>
+<button onclick="showGame('nova')">Nova Blaster 🚀</button>
+<button onclick="showGame('tetris')">Tetris</button>
+       
+</header>
+
+<!-- MENÜ -->
+<div id="menu" class="game active">
+    <h2>Willkommen!</h2>
+    <p>Wähle ein Spiel oben aus 🎯</p>
+</div>
+
+
+
+<!-- SNAKE SPIEL -->
+<div id="snake" class="game">
+<h2>🐍 Snake</h2>
+
+<iframe 
+src="snake.html"
+width="600"
+height="500"
+style="border:none;">
+</iframe>
+
+</div>
+
+<!-- FLAPPY -->
+<div id="flappy" class="game">
+<h2>🐦 Flappy Bird</h2>
+
+<iframe
+src="flappybird.html"
+width="420"
+height="640"
+style="border:none;">
+</iframe>
+
+</div>
+
+<!-- NOVA BLASTER -->
+<div id="nova" class="game">
+<h2>🚀 Nova Blaster</h2>
+
+<iframe 
+src="novablaster.html"
+width="600"
+height="600"
+style="border:none;">
+</iframe>
+
+
+<!-- TETRIS -->
+<div id="tetris" class="game">
+<h2>Tetris</h2>
+
+<iframe 
+src="tetris.html"
+width="420"
+height="550"
+style="border:none;">
+</iframe>
+
+
+
+    
+
+<script>
+// ---------------- MENU ----------------
+let score = 0;
+let secretNumber = Math.floor(Math.random() * 10) + 1;
+
+function showGame(id) {
+    document.querySelectorAll(".game").forEach(g => g.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+
+    if (id === "guess") {
+        secretNumber = Math.floor(Math.random() * 10) + 1;
+        document.getElementById("result").innerText = "";
+    }
+
+    if (id === "snake") {
+        startSnake();
+    }
+}
+
+
+
+
+// ---------------- SCROLLBLOCK ----------------
+
+    
+document.addEventListener("keydown", function(e) {
+    const keys = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
+
+    if (keys.includes(e.key)) {
+        e.preventDefault();
+    }
+}, true);
+    
+
+    
+    
+</script>
+
+</body>
+</html>
