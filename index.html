@@ -117,6 +117,8 @@ canvas, iframe {
         <button onclick="showGame('nova')">Nova Blaster 🚀</button>
         <button onclick="showGame('tetris')">Tetris</button>
         <button onclick="showGame('auto')">Auto 🚗</button>
+        <button onclick="showGame('tower')">Tower Defense 🏰</button>
+        
     </div>
 </header>
 
@@ -162,6 +164,13 @@ canvas, iframe {
     <iframe src="auto.html" width="600" height="700"></iframe>
 </div>
 
+
+<!-- TOWERDEFENSE -->
+<div id="tower" class="game">
+    <button class="backBtn" onclick="showGame('menu')">⬅ Zurück</button>
+    <h2>Towerdefense 🏰</h2>
+    <iframe src="tower_defense.html" width="600" height="600"></iframe>
+</div>    
 
 <script>
 function showGame(id) {
