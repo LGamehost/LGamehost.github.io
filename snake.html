@@ -228,6 +228,14 @@ function loop() {
 startGame();
 loop();
 </script>
-
+    
+ <script>
+window.addEventListener("keydown", function(e) {
+    if (["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) {
+        e.preventDefault();
+    }
+}, { passive: false });
+</script>
+    
 </body>
 </html>
