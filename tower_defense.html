@@ -52,24 +52,24 @@ canvas { display: block; width: 600px; height: 620px; min-width: 600px; max-widt
       <div class="hp-bar-bg"><div class="hp-bar-fill" id="hpBar" style="width:100%;background:#27ae60;"></div></div>
       <div style="color:#fff;font-size:10px;text-align:right;margin-top:1px;font-family:'Segoe UI',sans-serif;" id="hpText">100 / 100</div>
     </div>
-    <div class="stat-row"><span class="stat-label">Gold</span><span class="stat-val gold" id="goldText">160</span></div>
+    <div class="stat-row"><span class="stat-label">Gold 💰</span><span class="stat-val gold" id="goldText">180</span></div>
     <div class="stat-row"><span class="stat-label">Welle</span><span class="stat-val" id="waveText">—</span></div>
     <div class="divider"></div>
     <div class="s-title">Türme bauen</div>
     <button class="tbtn archer" id="btnArcher">
-      <span class="btn-name">Bogenschütze</span>
-      <span class="btn-cost">80 Gold</span>
-      <span class="btn-desc">2 Schaden · mittl. Reichw.</span>
+      <span class="btn-name">Bogenschützenturm</span>
+      <span class="btn-cost">60 💰</span>
+      <span class="btn-desc">3 Schaden · mittl. Reichw.</span>
     </button>
     <button class="tbtn cannon" id="btnCannon">
       <span class="btn-name">Kanonenturm</span>
-      <span class="btn-cost">120 Gold</span>
+      <span class="btn-cost">80 💰</span>
       <span class="btn-desc">5 Schaden · langsam</span>
     </button>
     <button class="tbtn mage" id="btnMage">
       <span class="btn-name">Magierturm</span>
-      <span class="btn-cost">160 Gold</span>
-      <span class="btn-desc">3 Flächenschaden</span>
+      <span class="btn-cost">100 💰</span>
+      <span class="btn-desc">4 Flächenschaden</span>
     </button>
     <div class="divider"></div>
     <div id="upgPanel">
@@ -89,20 +89,20 @@ canvas { display: block; width: 600px; height: 620px; min-width: 600px; max-widt
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const GS=40,COLS=15,ROWS=15,CX=7,CY=7;
-let baseHP=100,money=160,gameOver=false;
+let baseHP=100,money=180,gameOver=false;
 let enemies=[],towers=[],arrows=[],particles=[],explosions=[];
 let buildMode=null,msg='',msgTimer=0,popup=null,selectedTower=null;
 let wave=0,enemiesToSpawn=0,spawnTimer=0,phase='prep';
 
 const TOWER_DEFS={
-  archer:{cost:80,range:145,cooldown:48,dmg:2,color:'#4a9a4a',label:'Bogenschütze'},
-  cannon:{cost:120,range:160,cooldown:96,dmg:5,color:'#a05a28',label:'Kanonenturm'},
-  mage:{cost:160,range:130,cooldown:96,dmg:3,color:'#8a28c0',label:'Magierturm',splash:55}
+  archer:{cost:60,range:145,cooldown:48,dmg:3,color:'#4a9a4a',label:'Bogenschütze'},
+  cannon:{cost:100,range:160,cooldown:96,dmg:5,color:'#a05a28',label:'Kanonenturm'},
+  mage:{cost:120,range:130,cooldown:96,dmg:4,color:'#8a28c0',label:'Magierturm',splash:55}
 };
 const UPGRADE_DEFS={
-  archer:{cost:40,rangeBonus:0.20,dmgBonus:1,label:'+20% Reichw., +1 Schaden'},
-  cannon:{cost:80,rangeBonus:0.10,dmgBonus:2,label:'+10% Reichw., +2 Schaden'},
-  mage:{cost:100,rangeBonus:0.20,dmgBonus:2,label:'+20% Reichw., +2 Schaden'}
+  archer:{cost:50,rangeBonus:0.20,dmgBonus:2,label:'+20% Reichw., +1 Schaden'},
+  cannon:{cost:70,rangeBonus:0.10,dmgBonus:2,label:'+10% Reichw., +2 Schaden'},
+  mage:{cost:80,rangeBonus:0.20,dmgBonus:2,label:'+20% Reichw., +2 Schaden'}
 };
 
 const terrain=[];
@@ -141,10 +141,11 @@ function spawnEnemy(){
   else if(side===2){x=Math.floor(Math.random()*COLS);y=0;}
   else{x=Math.floor(Math.random()*COLS);y=ROWS-1;}
   if(type==='heavy'){
-    enemies.push({x,y,hp:20,maxHp:20,speed:0.018+wave*0.001,color:'#8a0000',angle:0,type:'heavy',dmg:5});
+    enemies.push({x,y,hp:20,maxHp:20,speed:0.009+wave*0.0005
+,color:'#8a0000',angle:0,type:'heavy',dmg:5});
   } else {
     const cols=['#8B3a3a','#4a5a00','#1a3a3a','#2c2c5e','#5a3a1a'];
-    enemies.push({x,y,hp:5,maxHp:5,speed:0.030+wave*0.002,color:cols[Math.floor(Math.random()*cols.length)],angle:0,type:'light',dmg:1});
+    enemies.push({x,y,hp:5,maxHp:5,speed:0.015+wave*0.001,color:cols[Math.floor(Math.random()*cols.length)],angle:0,type:'light',dmg:1});
   }
 }
 
