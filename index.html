@@ -497,26 +497,27 @@ iframe {
                 <span class="card-icon">🏰</span>
                 <span class="card-title">Tower Defense</span>
             </div>
-            <div class="game-card" onclick="showGame('pong')">
-                <span class="card-icon">⚪️</span>
-                <span class="card-title">Pong</span>
-            </div>
             <div class="game-card" onclick="showGame('jump')">
                 <span class="card-icon">👨‍🚀</span>
                 <span class="card-title">Space Dash</span>
             </div>
-           
+       
+            <div class="game-card" onclick="showGame('geodash')">
+                <span class="card-icon">🟩</span>
+                <span class="card-title">Cube Dash</span>
+            </div>
             <div class="game-card" onclick="showGame('blockblast')">
                 <span class="card-icon">🟥</span>
                 <span class="card-title">Block Blast</span>
             </div>
+            <div class="game-card" onclick="showGame('pong')">
+                <span class="card-icon">⚪️</span>
+                <span class="card-title">Pong</span>
+            </div>
+      
             <div class="game-card" onclick="showGame('schach')">
                 <span class="card-icon">♟️</span>
                 <span class="card-title">Schach</span>
-            </div>
-            <div class="game-card" onclick="showGame('geodash')">
-                <span class="card-icon">🟩</span>
-                <span class="card-title">Cube Dash</span>
             </div>
         </div>
     </div>
@@ -643,7 +644,19 @@ iframe {
     </div>
 </div>
 
-<!-- SCHACH -->
+
+<!-- HARBOR MASTER -->
+<div id="harbor" class="game">
+    <div class="game-header">
+        <button class="backBtn" onclick="showGame('menu')">⬅ Zurück</button>
+        <span class="game-title">⚓️ Harbor Master</span>
+    </div>
+    <div class="iframe-wrap" style="--iframe-h:600px;">
+        <iframe src="harbor_master.html" width="800" height="600" scrolling="no"></iframe>
+    </div>
+</div>
+
+<!-- Schach -->
 <div id="schach" class="game">
     <div class="game-header">
         <button class="backBtn" onclick="showGame('menu')">⬅ Zurück</button>
@@ -652,7 +665,7 @@ iframe {
     <div class="iframe-wrap" style="--iframe-h:600px;">
         <iframe src="schach.html" width="1000" height="600" scrolling="no"></iframe>
     </div>
-</div>    
+</div>
 ```
 
 </div>
