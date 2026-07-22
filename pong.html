@@ -128,7 +128,7 @@
     cursor: pointer;
     text-transform: uppercase;
     transition: all 0.15s;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+    border-radius: 4px;
   }
 
   .menu-btn::before {
@@ -138,7 +138,7 @@
     background: linear-gradient(90deg, rgba(0,255,231,0.08), rgba(255,45,120,0.08));
     opacity: 0;
     transition: opacity 0.15s;
-    clip-path: inherit;
+    border-radius: 4px;
   }
 
   .menu-btn:hover {
@@ -154,8 +154,8 @@
   /* ── BACK BUTTON ── */
   #backBtn {
     position: absolute;
-    top: 14px;
-    left: 14px;
+    top: -44px;
+    left: 0;
     z-index: 25;
     display: none;
     font-family: 'Share Tech Mono', monospace;
@@ -243,6 +243,7 @@
     <div class="subtitle">Insert coin to play</div>
     <button class="menu-btn" onclick="startGame(1)">1 PLAYER</button>
     <button class="menu-btn" onclick="startGame(2)">2 PLAYER</button>
+    <button class="menu-btn" style="border-color:rgba(255,230,0,0.35)" onclick="startTraining()">TRAINING</button>
   </div>
 
   <div id="gameOverScreen">
@@ -299,6 +300,11 @@ let hitParticles = [];
 let scoreFlash = { l: 0, r: 0 };
 let trails = [];
 
+// Training mode
+let trainingScore = 0;
+let trainingHigh = parseInt(localStorage.getItem('pong_training_hs') || '0');
+let trainingScoreFlash = 0;
+
 document.addEventListener('keydown', e => keys[e.key] = true);
 document.addEventListener('keyup',   e => keys[e.key] = false);
 window.addEventListener('keydown', e => {
@@ -347,8 +353,8 @@ function resetBall() {
   trails = [];
   ball = {
     x: W / 2, y: H / 2,
-    dx: (Math.random() > 0.5 ? 4.5 : -4.5),
-    dy: (Math.random() * 4 - 2)
+    dx: (Math.random() > 0.5 ? 3.2 : -3.2),
+    dy: (Math.random() * 3 - 1.5)
   };
 }
 
@@ -359,11 +365,96 @@ function goMenu() {
   document.getElementById('gameOverScreen').style.display = 'none';
 }
 
-function restartGame() { startGame(mode); }
+function restartGame() { mode === 3 ? startTraining() : startGame(mode); }
+
+function startTraining() {
+  mode = 3;
+  document.getElementById('menu').style.display = 'none';
+  document.getElementById('gameOverScreen').style.display = 'none';
+  document.getElementById('backBtn').style.display = 'block';
+  trainingScore = 0;
+  gameOver = false;
+  hitParticles = [];
+  trails = [];
+  left = { x: 22, y: 220 };
+  resetBallTraining();
+}
+
+function resetBallTraining() {
+  trails = [];
+  // Always launch toward player first
+  ball = {
+    x: W / 2, y: H / 2,
+    dx: -3.2,
+    dy: (Math.random() * 3 - 1.5)
+  };
+}
 
 /* ══════════════ UPDATE ══════════════ */
 function update() {
   if (!ball || mode === 0 || gameOver) return;
+
+  /* ── TRAINING MODE ── */
+  if (mode === 3) {
+    const spd = 6.5;
+    if (keys['ArrowUp'] || keys['w']) left.y -= spd;
+    if (keys['ArrowDown'] || keys['s']) left.y += spd;
+    left.y = Math.max(0, Math.min(H - 110, left.y));
+
+    addTrail(ball.x, ball.y);
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    // Top/bottom walls
+    if (ball.y <= 6)     { ball.dy = Math.abs(ball.dy) * 1.1; ball.dx *= 1.1; ball.dx = Math.min(Math.abs(ball.dx), 15) * Math.sign(ball.dx); spawnHit(ball.x, 6, '#fff'); }
+    if (ball.y >= H - 6) { ball.dy = -Math.abs(ball.dy) * 1.1; ball.dx *= 1.1; ball.dx = Math.min(Math.abs(ball.dx), 15) * Math.sign(ball.dx); spawnHit(ball.x, H - 6, '#fff'); }
+
+    // Right wall
+    if (ball.x >= W - 7) {
+      ball.dx = -Math.abs(ball.dx) * 1.1;
+      ball.dx = Math.max(ball.dx, -15);
+      ball.x = W - 7;
+      spawnHit(W - 7, ball.y, '#ffe600');
+    }
+
+    // Left paddle hit
+    if (ball.x < left.x + 14 && ball.x > left.x - 4 &&
+        ball.y > left.y - 6 && ball.y < left.y + 110 + 6) {
+      const hit = (ball.y - left.y) / 110;
+      ball.dx = Math.min(Math.abs(ball.dx) * 1.18, 18);
+      ball.dy = (hit - 0.5) * 11;
+      ball.x = left.x + 14;
+      trainingScore++;
+      trainingScoreFlash = 1;
+      if (trainingScore > trainingHigh) {
+        trainingHigh = trainingScore;
+        localStorage.setItem('pong_training_hs', trainingHigh);
+      }
+      spawnHit(ball.x, ball.y, '#00ffe7');
+    }
+
+    // Ball exits left → game over
+    if (ball.x < -10) {
+      gameOver = true;
+      const go = document.getElementById('gameOverScreen');
+      go.style.display = 'flex';
+      document.getElementById('resultText').textContent = 'GAME OVER';
+      document.getElementById('resultText').style.color = 'var(--pink)';
+      document.getElementById('resultSub').textContent = `SCORE: ${trainingScore}  |  BEST: ${trainingHigh}`;
+    }
+
+    // Particles & trail decay
+    for (const p of hitParticles) {
+      p.x += p.dx; p.y += p.dy;
+      p.dy += 0.08; p.dx *= 0.97;
+      p.life -= 0.035;
+    }
+    hitParticles = hitParticles.filter(p => p.life > 0);
+    trainingScoreFlash = Math.max(0, trainingScoreFlash - 0.06);
+    for (const t of trails) t.life -= 0.06;
+    trails = trails.filter(t => t.life > 0);
+    return;
+  }
 
   if (score1 >= 7 || score2 >= 7) {
     gameOver = true;
@@ -400,15 +491,15 @@ function update() {
   ball.y += ball.dy;
 
   /* Wall bounce */
-  if (ball.y <= 6)       { ball.dy =  Math.abs(ball.dy); spawnHit(ball.x, 6, '#fff'); }
-  if (ball.y >= H - 6)   { ball.dy = -Math.abs(ball.dy); spawnHit(ball.x, H - 6, '#fff'); }
+  if (ball.y <= 6)       { ball.dy =  Math.abs(ball.dy) * 1.1; ball.dx *= 1.1; ball.dx = Math.min(Math.abs(ball.dx), 13) * Math.sign(ball.dx); spawnHit(ball.x, 6, '#fff'); }
+  if (ball.y >= H - 6)   { ball.dy = -Math.abs(ball.dy) * 1.1; ball.dx *= 1.1; ball.dx = Math.min(Math.abs(ball.dx), 13) * Math.sign(ball.dx); spawnHit(ball.x, H - 6, '#fff'); }
 
   /* Left paddle */
   if (ball.x < left.x + 14 && ball.x > left.x &&
       ball.y > left.y - 6 && ball.y < left.y + 110 + 6) {
     const hit = (ball.y - left.y) / 110;
-    ball.dx = Math.min(Math.abs(ball.dx) * 1.08, 14);
-    ball.dy = (hit - 0.5) * 11;
+    ball.dx = Math.min(Math.abs(ball.dx) * 1.18, 16);
+    ball.dy = (hit - 0.5) * 9;
     ball.x = left.x + 14;
     spawnHit(ball.x, ball.y, '#00ffe7');
   }
@@ -417,10 +508,10 @@ function update() {
   if (ball.x > right.x - 14 && ball.x < right.x + 14 &&
       ball.y > right.y - 6 && ball.y < right.y + 110 + 6) {
     const hit = (ball.y - right.y) / 110;
-    ball.dx = -Math.min(Math.abs(ball.dx) * 1.08, 14);
-    ball.dy = (hit - 0.5) * 11;
+    ball.dx = -Math.min(Math.abs(ball.dx) * 1.18, 16);
+    ball.dy = (hit - 0.5) * 9;
     ball.x = right.x - 14;
-    spawnHit(ball.x, ball.y, '#ff2d78');
+    spawnHit(ball.x, ball.y, '#ff1a1a');
   }
 
   /* Score */
@@ -455,6 +546,91 @@ function draw() {
   ctx.fillStyle = '#04080f';
   ctx.fillRect(0, 0, W, H);
 
+  /* ── TRAINING DRAW ── */
+  if (mode === 3) {
+    // Grid
+    ctx.strokeStyle = 'rgba(255,230,0,0.03)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // Right wall
+    const wGrad = ctx.createLinearGradient(W - 18, 0, W, 0);
+    wGrad.addColorStop(0, 'rgba(255,230,0,0)');
+    wGrad.addColorStop(1, 'rgba(255,230,0,0.18)');
+    ctx.fillStyle = wGrad;
+    ctx.fillRect(W - 18, 0, 18, H);
+
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#ffe600';
+    ctx.strokeStyle = '#ffe600';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(W - 3, 0);
+    ctx.lineTo(W - 3, H);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Score top-left
+    ctx.textAlign = 'left';
+    ctx.font = '900 52px Orbitron, monospace';
+    const sc = trainingScoreFlash > 0 ? 1 : 1;
+    ctx.fillStyle = `#00ffe7`;
+    ctx.shadowColor = '#00ffe7';
+    ctx.shadowBlur = trainingScoreFlash > 0 ? 50 : 22;
+    ctx.fillText(trainingScore, 22, 62);
+    ctx.shadowBlur = 0;
+    ctx.font = '700 11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(0,255,231,0.55)';
+    ctx.fillText('SCORE', 22, 80);
+
+    // High score top-right
+    ctx.textAlign = 'right';
+    ctx.font = '900 52px Orbitron, monospace';
+    ctx.fillStyle = '#ffe600';
+    ctx.shadowColor = '#ffe600';
+    ctx.shadowBlur = 22;
+    ctx.fillText(trainingHigh, W - 22, 62);
+    ctx.shadowBlur = 0;
+    ctx.font = '700 11px Orbitron, monospace';
+    ctx.fillStyle = 'rgba(255,230,0,0.55)';
+    ctx.fillText('BEST', W - 22, 80);
+
+    // Trail
+    for (const t of trails) {
+      ctx.globalAlpha = t.life * 0.35;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 8;
+      ctx.shadowColor = '#ffe600';
+      ctx.beginPath();
+      ctx.arc(t.x, t.y, 6 * t.life, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 0;
+
+    // Ball
+    if (ball) {
+      ctx.shadowBlur = 28; ctx.shadowColor = 'white'; ctx.fillStyle = 'white';
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0; ctx.fillStyle = '#fffde0';
+      ctx.beginPath(); ctx.arc(ball.x, ball.y, 3, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Particles
+    for (const p of hitParticles) {
+      ctx.globalAlpha = p.life * 0.9;
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = 8; ctx.shadowColor = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r * p.life, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+    // Player paddle
+    drawPaddle(left.x, left.y, '#00ffe7');
+    return;
+  }
+
   /* Subtle grid */
   ctx.strokeStyle = 'rgba(0,255,231,0.04)';
   ctx.lineWidth = 1;
@@ -483,21 +659,15 @@ function draw() {
   ctx.textAlign = 'center';
 
   // P1 score
-  const c1 = scoreFlash.l > 0
-    ? `rgba(0,255,231,${0.5 + scoreFlash.l * 0.5})`
-    : 'rgba(255,255,255,0.18)';
-  ctx.fillStyle = c1;
+  ctx.fillStyle = scoreFlash.l > 0 ? `rgba(0,255,231,1)` : 'rgba(0,255,231,0.75)';
   ctx.shadowColor = '#00ffe7';
-  ctx.shadowBlur = scoreFlash.l > 0 ? 30 : 0;
+  ctx.shadowBlur = scoreFlash.l > 0 ? 50 : 18;
   ctx.fillText(score1, W / 2 - 80, 70);
 
   // P2 score
-  const c2 = scoreFlash.r > 0
-    ? `rgba(255,45,120,${0.5 + scoreFlash.r * 0.5})`
-    : 'rgba(255,255,255,0.18)';
-  ctx.fillStyle = c2;
-  ctx.shadowColor = '#ff2d78';
-  ctx.shadowBlur = scoreFlash.r > 0 ? 30 : 0;
+  ctx.fillStyle = scoreFlash.r > 0 ? `rgba(255,26,26,1)` : 'rgba(255,26,26,0.85)';
+  ctx.shadowColor = '#ff1a1a';
+  ctx.shadowBlur = scoreFlash.r > 0 ? 50 : 18;
   ctx.fillText(score2, W / 2 + 80, 70);
   ctx.shadowBlur = 0;
 
@@ -552,7 +722,7 @@ function draw() {
 
   /* ── PADDLES ── */
   drawPaddle(left.x, left.y, '#00ffe7');
-  drawPaddle(right.x - 12, right.y, '#ff2d78');
+  drawPaddle(right.x - 12, right.y, '#ff1a1a');
 }
 
 function drawPaddle(x, y, color) {
